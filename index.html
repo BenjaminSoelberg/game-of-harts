@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#ffc4d6">
+  <title>love you more</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+    }
+    body {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, #ffe4ec 0%, #ffc4d6 100%);
+      display: flex;
+      flex-direction: column;
+      padding:
+        calc(8px + env(safe-area-inset-top))
+        calc(8px + env(safe-area-inset-right))
+        calc(8px + env(safe-area-inset-bottom))
+        calc(8px + env(safe-area-inset-left));
+      box-sizing: border-box;
+      gap: 10px;
+    }
+    .label {
+      flex: 0 0 auto;
+      position: relative;
+      text-align: center;
+      font-family: "Snell Roundhand", "Brush Script MT", "Bradley Hand", cursive;
+      font-size: 30px;
+      line-height: 1;
+      color: rgba(160, 60, 100, 0.85);
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+      padding: 0 12px;
+    }
+    .label .count {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(160, 60, 100, 0.75);
+      letter-spacing: 0.3px;
+    }
+    .half {
+      flex: 1 1 0;
+      min-height: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      overflow: hidden;
+      padding: 14px 16px;
+      border: 2.5px solid rgba(230, 110, 155, 0.55);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.22);
+      box-shadow:
+        0 4px 18px rgba(220, 90, 140, 0.18),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+      --heart-size: 40px;
+      line-height: 1;
+    }
+    #npc {
+      position: relative;
+    }
+    #player {
+      align-content: flex-end;
+      position: relative;
+      cursor: pointer;
+    }
+    .heart {
+      font-size: var(--heart-size);
+      line-height: 1;
+      margin: 1px;
+      display: inline-block;
+      animation: pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      will-change: transform, opacity;
+    }
+    @keyframes pop {
+      0% {
+        transform: translateY(8px) scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+    #hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      pointer-events: none;
+      text-align: center;
+      z-index: 5;
+      text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+      animation: hint-pulse 1.6s ease-in-out infinite;
+      transition: opacity 0.7s ease-out;
+    }
+    #hint .title {
+      font-family: "Snell Roundhand", "Brush Script MT", "Bradley Hand", cursive;
+      font-size: 34px;
+      line-height: 1;
+      color: rgba(160, 60, 100, 0.95);
+    }
+    #hint .cta {
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      line-height: 1;
+      color: rgba(180, 70, 110, 0.85);
+    }
+    #hint.fade {
+      animation: none;
+      opacity: 0;
+    }
+    @keyframes hint-pulse {
+      0%, 100% { opacity: 0.65; }
+      50%      { opacity: 1;    }
+    }
+    #reset {
+      position: fixed;
+      top: calc(8px + env(safe-area-inset-top));
+      left: calc(8px + env(safe-area-inset-left));
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: rgba(160, 60, 100, 0.8);
+      font-size: 24px;
+      line-height: 42px;
+      padding: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      z-index: 10;
+    }
+    #reset:active {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <button id="reset" aria-label="reset">↻</button>
+  <div class="label">Benjamin<span class="count" id="npc-count">0 harts</span></div>
+  <div id="npc" class="half"></div>
+  <div class="label">Mia<span class="count" id="player-count">0 harts</span></div>
+  <div id="player" class="half">
+    <div id="hint">
+      <div class="title">Game of harts</div>
+      <div class="cta">Tap here ❤️</div>
+    </div>
+  </div>
+  <script>
+    const EMOJIS = [
+      '❤️','🧡','💛','💚','💙','💜','🤎','🖤','🤍','🩷','🩵','🩶',
+      '💕','💖','💗','💓','💞','💝','💘','💟','❣️','❤️‍🔥','❤️‍🩹',
+      '😘','🥰','😍','💋','🫶','🌹','💐','🌷','🌸','✨','💌'
+    ];
+
+    const npc = document.getElementById('npc');
+    const player = document.getElementById('player');
+    const resetBtn = document.getElementById('reset');
+    const hint = document.getElementById('hint');
+    const npcCountEl = document.getElementById('npc-count');
+    const playerCountEl = document.getElementById('player-count');
+    let npcCount = 0, playerCount = 0;
+    function updateCounts() {
+      npcCountEl.textContent = npcCount + ' harts';
+      playerCountEl.textContent = playerCount + ' harts';
+    }
+
+    const BASE_SIZE = 40;
+    const MIN_SIZE = 10;
+    const sizes = new WeakMap();
+    sizes.set(npc, BASE_SIZE);
+    sizes.set(player, BASE_SIZE);
+
+    function randomEmoji() {
+      return EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    }
+
+    function addHeart(container) {
+      const span = document.createElement('span');
+      span.className = 'heart';
+      span.textContent = randomEmoji();
+      container.appendChild(span);
+      fitToContainer(container);
+    }
+
+    function fitToContainer(container) {
+      let size = sizes.get(container);
+      while (container.scrollHeight > container.clientHeight && size > MIN_SIZE) {
+        size -= 1;
+        container.style.setProperty('--heart-size', size + 'px');
+      }
+      sizes.set(container, size);
+    }
+
+    function onTap(e) {
+      e.preventDefault();
+      hint.classList.add('fade');
+      addHeart(player);
+      playerCount++;
+      const n = 1 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) addHeart(npc);
+      npcCount += n;
+      updateCounts();
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function reset() {
+      npc.querySelectorAll('.heart').forEach(h => h.remove());
+      player.querySelectorAll('.heart').forEach(h => h.remove());
+      hint.classList.remove('fade');
+      [npc, player].forEach(c => {
+        c.style.setProperty('--heart-size', BASE_SIZE + 'px');
+        sizes.set(c, BASE_SIZE);
+      });
+      npcCount = 0;
+      playerCount = 0;
+      updateCounts();
+      if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    player.addEventListener('pointerdown', onTap, { passive: false });
+    resetBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      reset();
+    });
+
+    document.addEventListener('gesturestart', e => e.preventDefault());
+    document.addEventListener('dblclick', e => e.preventDefault());
+  </script>
+</body>
+</html>
